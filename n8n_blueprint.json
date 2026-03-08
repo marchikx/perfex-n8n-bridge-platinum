@@ -1,0 +1,332 @@
+{
+  "name": "Perfex CRM Integration - Sample Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "perfex-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Perfex Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "perfex-crm-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Verify HMAC Signature from Perfex CRM\nconst crypto = require('crypto');\n\n// Get the HMAC secret from environment or set it here\nconst hmacSecret = $env.PERFEX_HMAC_SECRET || 'your-hmac-secret-here';\n\n// Get the signature from headers\nconst receivedSignature = $input.first().headers['x-perfex-signature'];\nconst receivedEvent = $input.first().headers['x-perfex-event'];\nconst receivedTimestamp = $input.first().headers['x-perfex-timestamp'];\n\n// Calculate expected signature\nconst payload = JSON.stringify($input.first().json);\nconst expectedSignature = crypto\n  .createHmac('sha256', hmacSecret)\n  .update(payload)\n  .digest('hex');\n\n// Verify signature\nconst isValid = receivedSignature === expectedSignature;\n\n// Check timestamp (reject if older than 5 minutes)\nconst timestampValid = (Date.now() / 1000) - parseInt(receivedTimestamp) < 300;\n\nreturn [{\n  json: {\n    verified: isValid && timestampValid,\n    event: receivedEvent,\n    timestamp: receivedTimestamp,\n    data: $input.first().json\n  }\n}];"
+      },
+      "id": "verify-signature",
+      "name": "Verify HMAC Signature",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.verified }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "signature-check",
+      "name": "Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "value1": "={{ $json.event }}",
+              "value2": "invoice_created",
+              "output": 0
+            },
+            {
+              "value1": "={{ $json.event }}",
+              "value2": "invoice_updated",
+              "output": 0
+            },
+            {
+              "value1": "={{ $json.event }}",
+              "value2": "lead_created",
+              "output": 1
+            },
+            {
+              "value1": "={{ $json.event }}",
+              "value2": "lead_updated",
+              "output": 1
+            },
+            {
+              "value1": "={{ $json.event }}",
+              "value2": "task_created",
+              "output": 2
+            },
+            {
+              "value1": "={{ $json.event }}",
+              "value2": "task_updated",
+              "output": 2
+            }
+          ]
+        }
+      },
+      "id": "route-by-event",
+      "name": "Route by Event Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process Invoice Events\nconst data = $input.first().json.data;\nconst invoice = data.invoice;\nconst client = data.client;\n\nreturn [{\n  json: {\n    event_type: $input.first().json.event,\n    invoice_id: invoice.id,\n    invoice_number: invoice.prefix + invoice.number,\n    total: invoice.total,\n    status: invoice.status,\n    client_name: client?.company || 'Unknown',\n    client_email: client?.email || '',\n    due_date: invoice.duedate,\n    public_link: invoice.public_link\n  }\n}];"
+      },
+      "id": "process-invoice",
+      "name": "Process Invoice",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1100, 150]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process Lead Events\nconst data = $input.first().json.data;\nconst lead = data.lead;\nconst status = data.status;\nconst source = data.source;\nconst assignedStaff = data.assigned_staff;\n\nreturn [{\n  json: {\n    event_type: $input.first().json.event,\n    lead_id: lead.id,\n    name: lead.name,\n    email: lead.email,\n    phone: lead.phonenumber,\n    company: lead.company,\n    status_id: status.id,\n    status_name: status.name,\n    source_name: source.name,\n    assigned_to: assignedStaff?.full_name || 'Unassigned',\n    description: lead.description\n  }\n}];"
+      },
+      "id": "process-lead",
+      "name": "Process Lead",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process Task Events\nconst data = $input.first().json.data;\nconst task = data.task;\nconst assignees = data.assignees || [];\n\nconst statusLabels = {\n  1: 'Not Started',\n  2: 'In Progress',\n  3: 'Testing',\n  4: 'Awaiting Feedback',\n  5: 'Complete'\n};\n\nreturn [{\n  json: {\n    event_type: $input.first().json.event,\n    task_id: task.id,\n    name: task.name,\n    description: task.description,\n    status: statusLabels[task.status] || 'Unknown',\n    priority: task.priority,\n    due_date: task.duedate,\n    assignees: assignees.map(a => a.full_name).join(', '),\n    admin_link: task.admin_link\n  }\n}];"
+      },
+      "id": "process-task",
+      "name": "Process Task",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1100, 450]
+    },
+    {
+      "parameters": {
+        "channel": "#crm-notifications",
+        "text": "=*{{ $json.event_type }}*\n\n{{ $json.event_type.includes('invoice') ? '**Invoice:** ' + $json.invoice_number + '\\n**Total:** $' + $json.total + '\\n**Client:** ' + $json.client_name : $json.event_type.includes('lead') ? '**Lead:** ' + $json.name + '\\n**Email:** ' + $json.email + '\\n**Status:** ' + $json.status_name : '**Task:** ' + $json.name + '\\n**Status:** ' + $json.status + '\\n**Assignees:** ' + $json.assignees }}",
+        "otherOptions": {}
+      },
+      "id": "slack-notification",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1350, 300],
+      "disabled": true,
+      "notesInFlow": true,
+      "notes": "Enable and configure with your Slack credentials"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Webhook received', event: $json.event }) }}"
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, message: 'Invalid signature' }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "error-response",
+      "name": "Invalid Signature Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 300]
+    },
+    {
+      "parameters": {
+        "content": "## Perfex CRM Integration Workflow\n\nThis workflow receives webhooks from Perfex CRM's N8N Bridge module.\n\n### Setup Instructions:\n\n1. **Copy the Webhook URL** after activating this workflow\n2. **Paste it** in Perfex CRM → Setup → N8N Bridge → Settings\n3. **Set the HMAC Secret** in both Perfex and N8N environment variables\n4. **Enable triggers** for the events you want to receive\n\n### Customization:\n\n- Enable the Slack node and configure your credentials\n- Add more processing nodes as needed\n- Create sub-workflows for complex logic",
+        "height": 280,
+        "width": 350
+      },
+      "id": "sticky-note",
+      "name": "Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [50, 50]
+    },
+    {
+      "parameters": {
+        "content": "### Sending Data Back to Perfex\n\nUse the HTTP Request node to call the Inbound Webhook URL:\n\n```json\nPOST /n8n_bridge/incoming/{token}\n{\n  \"action\": \"update_lead_status\",\n  \"data\": {\n    \"lead_id\": 123,\n    \"status_id\": 2\n  }\n}\n```\n\n**Supported Actions:**\n- update_lead_status\n- update_lead\n- add_task_comment\n- update_task_status\n- update_invoice_status\n- add_note",
+        "height": 320,
+        "width": 300
+      },
+      "id": "sticky-note-2",
+      "name": "Inbound API Reference",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [450, 50]
+    }
+  ],
+  "connections": {
+    "Perfex Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Verify HMAC Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify HMAC Signature": {
+      "main": [
+        [
+          {
+            "node": "Signature Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature Valid?": {
+      "main": [
+        [
+          {
+            "node": "Route by Event Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Signature Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Event Type": {
+      "main": [
+        [
+          {
+            "node": "Process Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Invoice": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Lead": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Task": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Notification": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Perfex Webhook Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Perfex CRM",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Integration",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "2.0.0"
+}

@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N8N Bridge - Documentation | Perfex CRM Module</title>
+    <meta name="description" content="Professional bi-directional automation suite connecting Perfex CRM to N8N workflow automation platform.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e1e2e;
+            --darker: #11111b;
+            --light: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            --gradient-secondary: linear-gradient(135deg, var(--secondary) 0%, #059669 100%);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            color: var(--gray-700);
+            background: var(--light);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 2rem;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-version {
+            background: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 140px 2rem 100px;
+            background: linear-gradient(180deg, var(--gray-100) 0%, var(--light) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--gray-200);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .hero-badge i {
+            color: var(--secondary);
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .hero h1 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--gray-500);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-200);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Features Grid */
+        .features {
+            padding: 100px 2rem;
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--gray-500);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon.primary { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+        .feature-icon.secondary { background: rgba(16, 185, 129, 0.1); color: var(--secondary); }
+        .feature-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .feature-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--gray-500);
+            font-size: 0.95rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            padding: 80px 2rem;
+        }
+
+        .content-section:nth-child(even) {
+            background: var(--gray-100);
+        }
+
+        /* Sidebar Layout */
+        .docs-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 80px 2rem;
+        }
+
+        .docs-sidebar {
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+        }
+
+        .docs-nav {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            padding: 1.5rem;
+        }
+
+        .docs-nav-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-400);
+            margin-bottom: 1rem;
+        }
+
+        .docs-nav-list {
+            list-style: none;
+        }
+
+        .docs-nav-list li {
+            margin-bottom: 0.25rem;
+        }
+
+        .docs-nav-list a {
+            display: block;
+            padding: 8px 12px;
+            color: var(--gray-600);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .docs-nav-list a:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+        }
+
+        .docs-nav-list a.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .docs-content {
+            min-width: 0;
+        }
+
+        .docs-content h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .docs-content h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin: 2.5rem 0 1rem;
+        }
+
+        .docs-content h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin: 2rem 0 0.75rem;
+        }
+
+        .docs-content p {
+            margin-bottom: 1rem;
+        }
+
+        .docs-content ul, .docs-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .docs-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: var(--darker);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        pre code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        code:not(pre code) {
+            background: var(--gray-100);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            color: var(--primary-dark);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--gray-800);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius) var(--radius) 0 0;
+            margin-bottom: -1.5rem;
+        }
+
+        .code-header span {
+            color: var(--gray-400);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--gray-700);
+            color: white;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        th {
+            background: var(--gray-100);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.95rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Alert Boxes */
+        .alert {
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius);
+            margin: 1.5rem 0;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .alert i {
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+        .alert-info {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid var(--primary);
+            color: var(--gray-700);
+        }
+
+        .alert-info i { color: var(--primary); }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .alert-success i { color: var(--secondary); }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-warning i { color: var(--warning); }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-danger i { color: var(--danger); }
+
+        /* Architecture Diagram */
+        .architecture {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            margin: 2rem 0;
+            border: 1px solid var(--gray-200);
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding: 2rem 0;
+        }
+
+        .flow-box {
+            background: var(--gradient);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: var(--radius);
+            text-align: center;
+            min-width: 160px;
+        }
+
+        .flow-box.secondary {
+            background: var(--gradient-secondary);
+        }
+
+        .flow-box i {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .flow-box h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            color: white;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: var(--gray-400);
+        }
+
+        /* Tabs */
+        .tabs {
+            margin: 2rem 0;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--gray-500);
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--gray-700);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: var(--gray-400);
+            padding: 4rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .footer-brand h3 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-brand p {
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .footer-links h4 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: var(--gray-400);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--gray-700);
+            margin-top: 3rem;
+            padding-top: 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .docs-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .docs-sidebar {
+                position: static;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-description {
+                font-size: 1.1rem;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+
+        /* Smooth animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-icon">
+                    <i class="fa-solid fa-plug"></i>
+                </div>
+                N8N Bridge
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#configuration">Configuration</a></li>
+                <li><a href="#api">API Reference</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+            <span class="nav-version">v2.0.0 Platinum</span>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-badge">
+                <i class="fa-solid fa-bolt"></i>
+                Professional Automation Suite for Perfex CRM
+            </div>
+            <h1>Connect Perfex CRM to <span>N8N</span></h1>
+            <p class="hero-description">
+                Enterprise-grade bi-directional webhook integration with HMAC security, 
+                resilient queue system, visual analytics, and event-based routing.
+            </p>
+            <div class="hero-buttons">
+                <a href="#installation" class="btn btn-primary">
+                    <i class="fa-solid fa-rocket"></i>
+                    Get Started
+                </a>
+                <a href="#api" class="btn btn-outline">
+                    <i class="fa-solid fa-book"></i>
+                    API Reference
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-container">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Everything you need to automate your Perfex CRM workflows with N8N</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon primary">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3>Real-time Webhooks</h3>
+                    <p>Instant notifications when CRM events occur. Trigger N8N workflows automatically on invoice, lead, task, and ticket changes.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon secondary">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </div>
+                    <h3>Bi-directional Sync</h3>
+                    <p>Send data to N8N AND receive updates back. Update leads, tasks, invoices, and more directly from your N8N workflows.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon warning">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3>HMAC-SHA256 Security</h3>
+                    <p>Enterprise-grade signature authentication on every webhook. Verify request authenticity and prevent tampering.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon danger">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <h3>Resilient Queue System</h3>
+                    <p>Guaranteed delivery with exponential backoff. Failed webhooks are automatically retried up to 5 times over 12 hours.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon primary">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <h3>Visual Analytics Dashboard</h3>
+                    <p>Chart.js powered statistics showing success rates, traffic timeline, and top triggers. Monitor your integration health at a glance.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon secondary">
+                        <i class="fa-solid fa-route"></i>
+                    </div>
+                    <h3>Event-Based Routing</h3>
+                    <p>Configure different webhook URLs per event type. Send invoice events to one workflow and lead events to another.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon warning">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3>Magic Button</h3>
+                    <p>One-click manual triggers on Lead and Invoice detail pages. Run N8N workflows instantly with SweetAlert2 feedback.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon danger">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <h3>System Health Monitoring</h3>
+                    <p>Real-time health checks with auto-fix tools. Monitor PHP version, cURL extension, queue status, and more.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Content -->
+    <section class="docs-layout" id="installation">
+        <aside class="docs-sidebar">
+            <nav class="docs-nav">
+                <div class="docs-nav-title">Documentation</div>
+                <ul class="docs-nav-list">
+                    <li><a href="#installation" class="active">Installation</a></li>
+                    <li><a href="#configuration">Configuration</a></li>
+                    <li><a href="#outbound">Outbound Webhooks</a></li>
+                    <li><a href="#inbound">Inbound Webhooks</a></li>
+                    <li><a href="#events">Supported Events</a></li>
+                    <li><a href="#routing">Event-Based Routing</a></li>
+                    <li><a href="#payload">Payload Format</a></li>
+                    <li><a href="#security">Security</a></li>
+                    <li><a href="#queue">Queue System</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="docs-content">
+            <!-- Installation -->
+            <h2>Installation</h2>
+            <p>Installing N8N Bridge is quick and straightforward. Follow these steps to get started:</p>
+
+            <h3>Requirements</h3>
+            <ul>
+                <li><strong>Perfex CRM</strong> 2.3.0 or higher</li>
+                <li><strong>PHP</strong> 7.4 or higher (PHP 8.x recommended)</li>
+                <li><strong>cURL extension</strong> enabled</li>
+                <li><strong>MySQL</strong> 5.7+ or MariaDB 10.2+</li>
+            </ul>
+
+            <h3>Step 1: Upload Module</h3>
+            <p>Upload the <code>n8n_bridge</code> folder to the <code>modules/</code> directory in your Perfex CRM installation.</p>
+
+            <div class="code-header">
+                <span>Directory Structure</span>
+            </div>
+            <pre><code class="language-plaintext">perfex_crm/
+├── modules/
+│   └── n8n_bridge/
+│       ├── controllers/
+│       ├── models/
+│       ├── views/
+│       ├── libraries/
+│       ├── language/
+│       ├── install.php
+│       └── n8n_bridge.php</code></pre>
+
+            <h3>Step 2: Activate Module</h3>
+            <ol>
+                <li>Log in to Perfex CRM admin panel</li>
+                <li>Navigate to <strong>Setup → Modules</strong></li>
+                <li>Find "N8N Bridge" in the module list</li>
+                <li>Click <strong>Activate</strong></li>
+            </ol>
+
+            <h3>Step 3: Configure</h3>
+            <p>After activation, navigate to <strong>Setup → N8N Bridge</strong> to configure your webhook settings.</p>
+
+            <div class="alert alert-success">
+                <i class="fa-solid fa-check-circle"></i>
+                <div>
+                    <strong>Installation Complete!</strong><br>
+                    The module will automatically create the necessary database tables and initialize default settings.
+                </div>
+            </div>
+
+            <!-- Configuration -->
+            <h2 id="configuration">Configuration</h2>
+            
+            <h3>Module Settings</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Setting</th>
+                            <th>Description</th>
+                            <th>Default</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Enable Module</strong></td>
+                            <td>Master switch to enable/disable all webhook functionality</td>
+                            <td>Disabled</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Webhook URL</strong></td>
+                            <td>Global N8N webhook URL to send events to</td>
+                            <td>Empty</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Secret Key</strong></td>
+                            <td>Optional shared secret for basic authentication</td>
+                            <td>Empty</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HMAC Secret</strong></td>
+                            <td>Auto-generated 64-character secret for signature verification</td>
+                            <td>Auto-generated</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Enable Queue</strong></td>
+                            <td>Enable automatic retry for failed deliveries</td>
+                            <td>Enabled</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max Retries</strong></td>
+                            <td>Maximum number of retry attempts (1-10)</td>
+                            <td>5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Architecture -->
+            <h3>Architecture Overview</h3>
+            <div class="architecture">
+                <div class="flow-diagram">
+                    <div class="flow-box">
+                        <i class="fa-solid fa-database"></i>
+                        <h4>Perfex CRM</h4>
+                    </div>
+                    <span class="flow-arrow">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </span>
+                    <div class="flow-box secondary">
+                        <i class="fa-solid fa-plug"></i>
+                        <h4>N8N Bridge</h4>
+                    </div>
+                    <span class="flow-arrow">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </span>
+                    <div class="flow-box">
+                        <i class="fa-solid fa-sitemap"></i>
+                        <h4>N8N Workflows</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outbound Webhooks -->
+            <h2 id="outbound">Outbound Webhooks (Perfex → N8N)</h2>
+            
+            <h3>Setting Up N8N</h3>
+            <ol>
+                <li>Open N8N and create a new workflow</li>
+                <li>Add a <strong>Webhook</strong> node as the trigger</li>
+                <li>Set HTTP Method to <strong>POST</strong></li>
+                <li>Copy the generated webhook URL</li>
+                <li>Paste the URL in Perfex N8N Bridge settings</li>
+            </ol>
+
+            <h3>Testing the Connection</h3>
+            <p>Use the "Test Connection" button in the settings to verify your webhook URL is working:</p>
+
+            <div class="code-header">
+                <span>Test Payload Sent</span>
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+            </div>
+            <pre><code class="language-json">{
+  "event": "test.ping",
+  "timestamp": 1705849200,
+  "source": "perfex_crm",
+  "version": "2.0.0",
+  "data": {
+    "event": "ping",
+    "message": "Hello from Perfex CRM"
+  }
+}</code></pre>
+
+            <!-- Inbound Webhooks -->
+            <h2 id="inbound">Inbound Webhooks (N8N → Perfex)</h2>
+            
+            <p>N8N Bridge can receive data from N8N to update your CRM. Use the Inbound URL displayed in settings.</p>
+
+            <h3>Inbound URL Format</h3>
+            <div class="code-header">
+                <span>Endpoint URL</span>
+            </div>
+            <pre><code class="language-plaintext">https://your-domain.com/n8n_bridge/incoming/YOUR_INBOUND_TOKEN</code></pre>
+
+            <div class="alert alert-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    <strong>Keep Your Token Secret!</strong><br>
+                    The inbound token authenticates requests. Never expose it publicly. You can regenerate it anytime from settings.
+                </div>
+            </div>
+
+            <h3>Supported Inbound Actions</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Required Fields</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>update_lead_status</code></td>
+                            <td><code>lead_id</code>, <code>status_id</code></td>
+                            <td>Update lead status</td>
+                        </tr>
+                        <tr>
+                            <td><code>update_lead</code></td>
+                            <td><code>lead_id</code> + field(s)</td>
+                            <td>Update lead fields (name, email, phone, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td><code>add_task_comment</code></td>
+                            <td><code>task_id</code>, <code>content</code></td>
+                            <td>Add comment to task</td>
+                        </tr>
+                        <tr>
+                            <td><code>update_task_status</code></td>
+                            <td><code>task_id</code>, <code>status</code></td>
+                            <td>Update task status (1-5)</td>
+                        </tr>
+                        <tr>
+                            <td><code>update_invoice_status</code></td>
+                            <td><code>invoice_id</code>, <code>status</code></td>
+                            <td>Update invoice status (1-6)</td>
+                        </tr>
+                        <tr>
+                            <td><code>add_note</code></td>
+                            <td><code>rel_id</code>, <code>rel_type</code>, <code>description</code></td>
+                            <td>Add note to any entity</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4>Example: Update Lead Status</h4>
+            <div class="code-header">
+                <span>HTTP Request from N8N</span>
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+            </div>
+            <pre><code class="language-json">{
+  "action": "update_lead_status",
+  "data": {
+    "lead_id": 123,
+    "status_id": 2
+  }
+}</code></pre>
+
+            <h4>Example: Add Task Comment</h4>
+            <div class="code-header">
+                <span>HTTP Request from N8N</span>
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+            </div>
+            <pre><code class="language-json">{
+  "action": "add_task_comment",
+  "data": {
+    "task_id": 456,
+    "content": "Automated comment from N8N workflow",
+    "staff_id": 1
+  }
+}</code></pre>
+
+            <!-- Supported Events -->
+            <h2 id="events">Supported Events</h2>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Trigger</th>
+                            <th>Data Included</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>invoice_created</code></td>
+                            <td>New invoice is created</td>
+                            <td>Invoice details, client info, line items</td>
+                        </tr>
+                        <tr>
+                            <td><code>invoice_updated</code></td>
+                            <td>Invoice is modified</td>
+                            <td>Invoice details, client info, line items</td>
+                        </tr>
+                        <tr>
+                            <td><code>lead_created</code></td>
+                            <td>New lead is added</td>
+                            <td>Lead info, status, source, assigned staff</td>
+                        </tr>
+                        <tr>
+                            <td><code>lead_updated</code></td>
+                            <td>Lead is modified</td>
+                            <td>Lead info, status, source, assigned staff</td>
+                        </tr>
+                        <tr>
+                            <td><code>task_created</code></td>
+                            <td>New task is created</td>
+                            <td>Task details, assignees, related entity</td>
+                        </tr>
+                        <tr>
+                            <td><code>task_updated</code></td>
+                            <td>Task is modified</td>
+                            <td>Task details, assignees, related entity</td>
+                        </tr>
+                        <tr>
+                            <td><code>ticket_created</code></td>
+                            <td>New support ticket</td>
+                            <td>Ticket info, department</td>
+                        </tr>
+                        <tr>
+                            <td><code>ticket_updated</code></td>
+                            <td>Ticket is modified</td>
+                            <td>Ticket info, department</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Event-Based Routing -->
+            <h2 id="routing">Event-Based Routing</h2>
+
+            <p>Send different events to different N8N workflows by configuring override URLs per event type.</p>
+
+            <h3>How It Works</h3>
+            <ol>
+                <li>Go to <strong>Triggers & Routing</strong> tab</li>
+                <li>Enable the events you want to trigger</li>
+                <li>Click <strong>Override URL</strong> to expand routing options</li>
+                <li>Enter a custom webhook URL for that specific event</li>
+                <li>Leave empty to use the global webhook URL</li>
+            </ol>
+
+            <div class="alert alert-info">
+                <i class="fa-solid fa-lightbulb"></i>
+                <div>
+                    <strong>Use Case Example:</strong><br>
+                    Send invoice events to a billing workflow and lead events to a sales automation workflow.
+                </div>
+            </div>
+
+            <!-- Payload Format -->
+            <h2 id="payload">Payload Format</h2>
+
+            <h3>Standard Payload Structure</h3>
+            <div class="code-header">
+                <span>JSON Payload</span>
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+            </div>
+            <pre><code class="language-json">{
+  "event": "invoice_created",
+  "timestamp": 1705849200,
+  "source": "perfex_crm",
+  "version": "2.0.0",
+  "data": {
+    "invoice": {
+      "id": 123,
+      "number": "INV-00123",
+      "total": 1500.00,
+      "status": 1,
+      "date": "2024-01-21",
+      "duedate": "2024-02-20",
+      "public_link": "https://..."
+    },
+    "client": {
+      "id": 45,
+      "company": "Acme Corp",
+      "email": "billing@acme.com"
+    },
+    "items": [...]
+  }
+}</code></pre>
+
+            <h3>HTTP Headers</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Header</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>X-Perfex-Event</code></td>
+                            <td>Event type identifier</td>
+                            <td><code>invoice_created</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>X-Perfex-Timestamp</code></td>
+                            <td>Unix timestamp</td>
+                            <td><code>1705849200</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>X-Perfex-Signature</code></td>
+                            <td>HMAC-SHA256 signature</td>
+                            <td><code>a1b2c3...</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>X-Perfex-Version</code></td>
+                            <td>Module version</td>
+                            <td><code>2.0.0</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Security -->
+            <h2 id="security">Security</h2>
+
+            <h3>HMAC-SHA256 Signature Verification</h3>
+            <p>Every outbound webhook includes an HMAC-SHA256 signature in the <code>X-Perfex-Signature</code> header. Use this to verify the request authenticity in N8N.</p>
+
+            <h4>Verifying Signatures in N8N</h4>
+            <div class="code-header">
+                <span>N8N Function Node - JavaScript</span>
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fa-regular fa-copy"></i></button>
+            </div>
+            <pre><code class="language-javascript">const crypto = require('crypto');
+const secret = 'YOUR_HMAC_SECRET';
+const payload = JSON.stringify($input.all()[0].json);
+const signature = crypto
+  .createHmac('sha256', secret)
+  .update(payload)
+  .digest('hex');
+
+// Compare signatures
+if (signature === $input.all()[0].headers['x-perfex-signature']) {
+  return [{ json: { verified: true, data: $input.all()[0].json } }];
+}
+return [{ json: { verified: false } }];</code></pre>
+
+            <div class="alert alert-danger">
+                <i class="fa-solid fa-lock"></i>
+                <div>
+                    <strong>Security Best Practices:</strong><br>
+                    • Always verify HMAC signatures in production<br>
+                    • Use HTTPS for all webhook URLs<br>
+                    • Regenerate tokens periodically<br>
+                    • Never expose tokens in client-side code
+                </div>
+            </div>
+
+            <!-- Queue System -->
+            <h2 id="queue">Queue System</h2>
+
+            <p>The resilient queue system ensures webhook delivery even when N8N is temporarily unavailable.</p>
+
+            <h3>Exponential Backoff Schedule</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Attempt</th>
+                            <th>Retry After</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>5 minutes</td>
+                            <td>Quick retry for transient failures</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>15 minutes</td>
+                            <td>Allow time for recovery</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>1 hour</td>
+                            <td>Longer wait period</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>4 hours</td>
+                            <td>Extended recovery time</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>12 hours</td>
+                            <td>Final attempt before marking as dead</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Queue Statuses</h3>
+            <ul>
+                <li><strong>Pending</strong> - Waiting for next retry attempt</li>
+                <li><strong>Processing</strong> - Currently being processed</li>
+                <li><strong>Completed</strong> - Successfully delivered</li>
+                <li><strong>Dead</strong> - All retry attempts exhausted</li>
+            </ul>
+
+            <!-- API Reference -->
+            <h2 id="api">API Reference</h2>
+
+            <h3>Inbound Webhook Endpoint</h3>
+            
+            <div class="code-header">
+                <span>POST /n8n_bridge/incoming/{token}</span>
+            </div>
+            <pre><code class="language-plaintext">POST https://your-domain.com/n8n_bridge/incoming/YOUR_TOKEN
+Content-Type: application/json
+
+{
+  "action": "action_name",
+  "data": { ... }
+}</code></pre>
+
+            <h4>Response Codes</h4>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>200</code></td>
+                            <td>Action processed successfully</td>
+                        </tr>
+                        <tr>
+                            <td><code>400</code></td>
+                            <td>Invalid request (missing action, invalid JSON, validation error)</td>
+                        </tr>
+                        <tr>
+                            <td><code>401</code></td>
+                            <td>Invalid or missing authentication token</td>
+                        </tr>
+                        <tr>
+                            <td><code>405</code></td>
+                            <td>Method not allowed (only POST accepted)</td>
+                        </tr>
+                        <tr>
+                            <td><code>500</code></td>
+                            <td>Internal server error</td>
+                        </tr>
+                        <tr>
+                            <td><code>503</code></td>
+                            <td>Inbound webhook not configured</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4>Success Response</h4>
+            <div class="code-header">
+                <span>JSON Response</span>
+            </div>
+            <pre><code class="language-json">{
+  "success": true,
+  "action": "update_lead_status",
+  "result": {
+    "lead_id": 123,
+    "status_id": 2,
+    "updated": true
+  },
+  "message": "Action processed successfully"
+}</code></pre>
+
+            <h4>Error Response</h4>
+            <div class="code-header">
+                <span>JSON Response</span>
+            </div>
+            <pre><code class="language-json">{
+  "success": false,
+  "error": "validation_error",
+  "message": "lead_id is required"
+}</code></pre>
+
+            <!-- Troubleshooting -->
+            <h2 id="troubleshooting">Troubleshooting</h2>
+
+            <h3>Webhooks Not Sending</h3>
+            <ol>
+                <li>Verify the module is <strong>enabled</strong> in settings</li>
+                <li>Check that the <strong>webhook URL</strong> is correctly configured</li>
+                <li>Ensure the specific <strong>event trigger</strong> is enabled</li>
+                <li>Test the connection using the "Test Connection" button</li>
+                <li>Check the <strong>Health</strong> tab for system issues</li>
+            </ol>
+
+            <h3>Queue Items Stuck</h3>
+            <ol>
+                <li>Go to <strong>Health & Support</strong> tab</li>
+                <li>Click <strong>Reset Stuck Queue Items</strong></li>
+                <li>Verify Perfex CRM cron job is running properly</li>
+                <li>Check if N8N webhook URL is accessible</li>
+            </ol>
+
+            <h3>Signature Verification Failing</h3>
+            <ol>
+                <li>Ensure you're using the correct <strong>HMAC secret</strong> from settings</li>
+                <li>The signature is calculated on the <strong>raw JSON body</strong></li>
+                <li>Check for any middleware modifying the request body</li>
+                <li>Verify JSON encoding matches (no extra whitespace)</li>
+            </ol>
+
+            <h3>Inbound Webhook Not Working</h3>
+            <ol>
+                <li>Verify the <strong>inbound token</strong> in the URL is correct</li>
+                <li>Ensure you're sending a <strong>POST</strong> request</li>
+                <li>Check the <strong>Content-Type</strong> header is <code>application/json</code></li>
+                <li>Validate your JSON payload structure</li>
+                <li>Check Perfex CRM logs for error messages</li>
+            </ol>
+
+            <div class="alert alert-info">
+                <i class="fa-solid fa-info-circle"></i>
+                <div>
+                    <strong>Need More Help?</strong><br>
+                    Check the system logs at <code>application/logs/</code> for detailed error messages. 
+                    The module logs all errors with the prefix "N8N Bridge:".
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3><i class="fa-solid fa-plug"></i> N8N Bridge</h3>
+                <p>
+                    Professional bi-directional automation suite connecting 
+                    Perfex CRM to N8N workflow automation platform.
+                </p>
+            </div>
+            <div class="footer-links">
+                <h4>Documentation</h4>
+                <ul>
+                    <li><a href="#installation">Installation</a></li>
+                    <li><a href="#configuration">Configuration</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Features</h4>
+                <ul>
+                    <li><a href="#outbound">Outbound Webhooks</a></li>
+                    <li><a href="#inbound">Inbound Webhooks</a></li>
+                    <li><a href="#routing">Event Routing</a></li>
+                    <li><a href="#security">Security</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="https://n8n.io/docs/" target="_blank">N8N Documentation</a></li>
+                    <li><a href="https://www.perfexcrm.com/docs/" target="_blank">Perfex CRM Docs</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>N8N Bridge v2.0.0 Platinum Release &copy; 2024 - All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+
+    <script>
+        // Initialize syntax highlighting
+        hljs.highlightAll();
+
+        // Copy code function
+        function copyCode(btn) {
+            const pre = btn.closest('.code-header').nextElementSibling;
+            const code = pre.querySelector('code').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                }, 2000);
+            });
+        }
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const offset = 90; // Account for fixed nav
+                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Active nav link highlighting
+        const navLinks = document.querySelectorAll('.docs-nav-list a');
+        const sections = document.querySelectorAll('h2[id]');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (pageYOffset >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Tabs functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabGroup = btn.closest('.tabs');
+                const targetId = btn.dataset.tab;
+                
+                // Update buttons
+                tabGroup.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update content
+                tabGroup.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tabGroup.querySelector('#' + targetId).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
