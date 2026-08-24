@@ -179,6 +179,35 @@ Complete documentation is available in `Documentation/index.html`
 2. Signature is calculated on raw JSON body
 3. Check for middleware modifying request
 
+**Receiving side: two settings the workflow cannot work without**
+
+The `Verify HMAC Signature` node hashes the exact bytes that were signed, so it
+needs the untouched request body and Node's `crypto`:
+
+- On the **Webhook** node: `Options -> Raw Body = ON`. Without it n8n hands the
+  node a re-serialised object, the bytes differ from what was signed, and every
+  genuine request is rejected.
+- On self-hosted n8n: `NODE_FUNCTION_ALLOW_BUILTIN=crypto` in the environment.
+  Without it the node cannot load `crypto` at all.
+
+**How replays are told apart from retries**
+
+The queue re-sends the stored body, so the timestamp inside a retry never moves
+and a 12-hour-old retry is indistinguishable from a replay by age alone. The
+node therefore accepts anything inside the retry window (13 hours, one hour past
+the final backoff step) and blocks repeats by remembering signatures it has
+already accepted, in the workflow's static data.
+
+A repeat comes back as `verified: true` with `duplicate: true`. The workflow
+answers `200` so the queue stops retrying, and the `Already Processed?` branch
+skips straight to the response instead of booking the same invoice twice.
+
+Known limit, stated plainly: workflow static data is written when an execution
+finishes and is not transactional, so two deliveries racing inside the same
+window can both get through. This stops the ordinary replay, not a determined
+attacker with concurrent access. A shared store such as Redis `SETNX` is the
+real answer and needs a node this blueprint does not ship.
+
 ---
 
 ## 📝 What's Included
