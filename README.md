@@ -2,7 +2,15 @@
 
 **Version 2.1.0**
 
-Professional bi-directional automation suite connecting Perfex CRM to N8N workflow automation platform.
+Bi-directional automation between Perfex CRM and n8n, installed inside Perfex.
+
+This repository is the source. The packaged download — the PHP module for Perfex, the blueprint and the offline documentation — is $39 at https://soluradev.gumroad.com/l/perfex-n8n-bridge
+
+**If you want an n8n node rather than a Perfex module, you probably want something else.** `n8n-nodes-perfexcrm` is MIT, free, installs as a community node, and covers a wider surface of the Perfex API. It runs inside n8n and calls Perfex.
+
+This runs the other way round. It installs inside Perfex and pushes out to n8n, which is why it carries a delivery queue: if n8n is down when an invoice is paid, the event is retried on a ladder of 5 minutes to 12 hours rather than lost, and a retry is told apart from a replay so nothing is processed twice. `node tests/verify-node.test.js` holds that behaviour to eighteen cases against the blueprint you would import.
+
+I have not compared that queue against what the free node does or does not do, so take it as a description of this one rather than a claim about the other. If you do not need delivery that survives n8n being down, take the free one.
 
 ---
 
