@@ -1,6 +1,6 @@
 # N8N Bridge for Perfex CRM
 
-**Version 2.0.0 - Platinum Release**
+**Version 2.1.0**
 
 Professional bi-directional automation suite connecting Perfex CRM to N8N workflow automation platform.
 
@@ -177,6 +177,31 @@ After 5 failed attempts, items are marked as "dead" and can be manually retried 
 ---
 
 ## Changelog
+
+### v2.1.0
+
+Signature verification did not work in 2.0. It hashed the request body after n8n had
+already parsed it, so the bytes it checked were never the bytes that had been signed,
+and every genuine request failed. The blueprint also shipped a fallback secret in the
+file, the literal string `your-hmac-secret-here`. The first fix for those broke the
+sender's retry ladder, because a delivery retried an hour later looks exactly like a
+replay unless something remembers what it has already seen.
+
+All three are fixed, and the fix is checkable rather than promised:
+
+```
+node tests/verify-node.test.js
+```
+
+No arguments, no dependencies. It reads the `Verify HMAC Signature` node out of
+`n8n_blueprint.json` and runs that code, so it tests the file you import rather than a
+copy of it. Eighteen cases, exit code 0 — eight on signature handling, five on the
+retry ladder (5 min to 12 h), five telling a genuine retry apart from a replay by
+memory rather than by age. A request signed with the published fallback secret has to
+be rejected for the run to pass.
+
+The stand covers the signature node. It does not cover the other thirteen nodes, the
+PHP sender, or an import into a live n8n instance.
 
 ### v2.0.0 - Platinum Release
 - Added Visual Analytics Dashboard with Chart.js
