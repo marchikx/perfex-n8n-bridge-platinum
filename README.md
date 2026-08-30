@@ -43,6 +43,28 @@ your-perfex-crm/
 
 ---
 
+## 🧪 Verify it yourself
+
+Do not take the security claims on trust — run them:
+
+```bash
+node tests/verify-node.test.js
+```
+
+No dependencies and no setup. The stand reads the `Verify HMAC Signature` node out of
+`n8n_blueprint.json` and executes that code, not a copy of it, so it tests whatever is
+in the file you are about to import. Eighteen cases: eight on signature handling, five
+on the retry ladder the PHP sender actually uses, five separating a genuine retry from
+a replay. Exit code is 0 only when every one of them behaves as specified.
+
+Two of those cases are permanent regressions rather than theory. Version 2.0 shipped a
+verification step that read the request body after n8n had parsed it, so it failed on
+every request; and it carried the literal string `your-hmac-secret-here` as a fallback
+secret. Case 4 signs a request with that published string and requires it to be
+rejected. If a future edit brings either fault back, this run turns red.
+
+---
+
 ## 📚 Documentation
 
 Open `Documentation/index.html` in your browser for complete documentation including:
