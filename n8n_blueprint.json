@@ -6,24 +6,32 @@
         "httpMethod": "POST",
         "path": "perfex-webhook",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {
+          "rawBody": true
+        }
       },
       "id": "webhook-trigger",
       "name": "Perfex Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "perfex-crm-webhook"
     },
     {
       "parameters": {
-        "functionCode": "// Verify HMAC Signature from Perfex CRM\nconst crypto = require('crypto');\n\n// Get the HMAC secret from environment or set it here\nconst hmacSecret = $env.PERFEX_HMAC_SECRET || 'your-hmac-secret-here';\n\n// Get the signature from headers\nconst receivedSignature = $input.first().headers['x-perfex-signature'];\nconst receivedEvent = $input.first().headers['x-perfex-event'];\nconst receivedTimestamp = $input.first().headers['x-perfex-timestamp'];\n\n// Calculate expected signature\nconst payload = JSON.stringify($input.first().json);\nconst expectedSignature = crypto\n  .createHmac('sha256', hmacSecret)\n  .update(payload)\n  .digest('hex');\n\n// Verify signature\nconst isValid = receivedSignature === expectedSignature;\n\n// Check timestamp (reject if older than 5 minutes)\nconst timestampValid = (Date.now() / 1000) - parseInt(receivedTimestamp) < 300;\n\nreturn [{\n  json: {\n    verified: isValid && timestampValid,\n    event: receivedEvent,\n    timestamp: receivedTimestamp,\n    data: $input.first().json\n  }\n}];"
+        "functionCode": "// Verify HMAC signature from Perfex CRM.\n// Requires on self-hosted n8n: NODE_FUNCTION_ALLOW_BUILTIN=crypto\n// Requires on the Webhook node: Options -> Raw Body = ON\n//\n// v3 changes over v2 (2026-08-24):\n//   The 300-second freshness window silently killed the sender's own retry\n//   queue. N8n_sender.php re-signs the STORED body on every retry, so the\n//   timestamp inside it never moves, and the ladder runs 5m / 15m / 1h / 4h /\n//   12h. Every one of those retries arrived older than 300s and was rejected.\n//   The window now covers the whole ladder, and replay protection is done the\n//   only way that actually distinguishes a replay from a retry: remembering\n//   which signed bodies were already accepted.\nconst crypto = require('crypto');\n\n// The sender's final retry fires at 12h (BACKOFF_INTERVALS in N8n_sender.php).\n// 13h leaves an hour of margin for a queue that drains slowly.\nconst MAX_AGE_SEC = 13 * 60 * 60;\n// Tolerated clock difference when the sender's clock runs ahead of ours.\nconst CLOCK_SKEW_SEC = 300;\n\nconst secret = $env.PERFEX_HMAC_SECRET;\nif (!secret) {\n  return [{ json: { verified: false, error: 'PERFEX_HMAC_SECRET is not set' } }];\n}\n\n// items[0] is this node's own input item. The Webhook node puts the request in\n// json as { body, headers, params, query } - headers are NOT on the item itself.\nconst item = items[0];\nconst req = item.json || {};\nconst headers = req.headers || {};\n\nconst sig = headers['x-perfex-signature'];\nif (!sig) {\n  return [{ json: { verified: false, error: 'missing X-Perfex-Signature header' } }];\n}\n\n// The sender signs the exact JSON bytes it wrote, so we must hash those bytes,\n// not a re-serialised object. With Raw Body on they arrive as binary.\nlet raw = null;\nif (item.binary && item.binary.data) {\n  const bin = await getBinaryDataAsync(item);\n  const b64 = (bin && bin.data && bin.data.data) || item.binary.data.data;\n  raw = Buffer.from(b64, 'base64');\n} else if (typeof req.body === 'string') {\n  raw = Buffer.from(req.body, 'utf8');\n}\nif (!raw) {\n  return [{ json: { verified: false, error: 'raw body not available - enable Raw Body on the Webhook node' } }];\n}\n\nconst expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');\nconst a = Buffer.from(expected, 'hex');\nconst b = Buffer.from(String(sig).trim(), 'hex');\nif (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {\n  return [{ json: { verified: false, error: 'bad signature' } }];\n}\n\n// Only now is anything in the body trustworthy - including its timestamp.\nlet payload;\ntry {\n  payload = JSON.parse(raw.toString('utf8'));\n} catch (e) {\n  return [{ json: { verified: false, error: 'signed body is not valid JSON' } }];\n}\n\n// Use the timestamp from the SIGNED body. X-Perfex-Timestamp is a separate\n// header, outside the signature, and freely settable by whoever sends.\nconst t = Number(payload.timestamp);\nif (!Number.isFinite(t)) {\n  return [{ json: { verified: false, error: 'missing or malformed timestamp in signed body' } }];\n}\nconst ageSec = Date.now() / 1000 - t;\nif (ageSec < -CLOCK_SKEW_SEC) {\n  return [{ json: { verified: false, error: 'timestamp is in the future' } }];\n}\nif (ageSec > MAX_AGE_SEC) {\n  return [{ json: { verified: false, error: 'timestamp older than the retry window' } }];\n}\n\n// Replay protection. A wide window is required for retries to work at all, so\n// freshness alone cannot carry it. The signature is a deterministic hash of the\n// signed bytes, which makes it a usable idempotency key with no cooperation\n// needed from the sender - the payload carries no event id of its own.\n//\n// Honest limit: workflow static data is written when the execution finishes and\n// is not transactional, so two deliveries racing inside one execution window can\n// both pass. It stops the ordinary replay, not a determined attacker with\n// concurrent access. A shared store (Redis SETNX) is the real answer and needs a\n// node this blueprint does not ship.\nconst store = $getWorkflowStaticData('global');\nif (!store.seenSignatures) {\n  store.seenSignatures = {};\n}\nconst nowSec = Math.floor(Date.now() / 1000);\nfor (const key of Object.keys(store.seenSignatures)) {\n  if (nowSec - store.seenSignatures[key] > MAX_AGE_SEC) {\n    delete store.seenSignatures[key];\n  }\n}\n\nconst already = store.seenSignatures[expected] !== undefined;\nstore.seenSignatures[expected] = nowSec;\n\n// A duplicate is reported as verified so the workflow answers 200 and the sender\n// stops retrying. Downstream must check `duplicate` before writing anything - it\n// is the flag that keeps a retried invoice from being booked twice.\nreturn [{\n  json: {\n    verified: true,\n    duplicate: already,\n    event: payload.event,\n    timestamp: t,\n    ageSeconds: Math.round(ageSec),\n    data: payload.data,\n  },\n}];\n"
       },
       "id": "verify-signature",
       "name": "Verify HMAC Signature",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [450, 300]
+      "position": [
+        450,
+        300
+      ]
     },
     {
       "parameters": {
@@ -40,7 +48,10 @@
       "name": "Signature Valid?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [650, 300]
+      "position": [
+        650,
+        300
+      ]
     },
     {
       "parameters": {
@@ -83,7 +94,10 @@
       "name": "Route by Event Type",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
-      "position": [850, 300]
+      "position": [
+        1050,
+        300
+      ]
     },
     {
       "parameters": {
@@ -93,7 +107,10 @@
       "name": "Process Invoice",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [1100, 150]
+      "position": [
+        1300,
+        150
+      ]
     },
     {
       "parameters": {
@@ -103,7 +120,10 @@
       "name": "Process Lead",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [1100, 300]
+      "position": [
+        1300,
+        300
+      ]
     },
     {
       "parameters": {
@@ -113,7 +133,10 @@
       "name": "Process Task",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [1100, 450]
+      "position": [
+        1300,
+        450
+      ]
     },
     {
       "parameters": {
@@ -125,7 +148,10 @@
       "name": "Slack Notification",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 1,
-      "position": [1350, 300],
+      "position": [
+        1550,
+        300
+      ],
       "disabled": true,
       "notesInFlow": true,
       "notes": "Enable and configure with your Slack credentials"
@@ -139,7 +165,10 @@
       "name": "Success Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1550, 300]
+      "position": [
+        1750,
+        300
+      ]
     },
     {
       "parameters": {
@@ -153,7 +182,10 @@
       "name": "Invalid Signature Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [850, 500]
+      "position": [
+        1050,
+        500
+      ]
     },
     {
       "parameters": {},
@@ -161,7 +193,10 @@
       "name": "Start",
       "type": "n8n-nodes-base.start",
       "typeVersion": 1,
-      "position": [50, 300]
+      "position": [
+        50,
+        300
+      ]
     },
     {
       "parameters": {
@@ -173,7 +208,10 @@
       "name": "Instructions",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [50, 50]
+      "position": [
+        50,
+        50
+      ]
     },
     {
       "parameters": {
@@ -185,7 +223,29 @@
       "name": "Inbound API Reference",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [450, 50]
+      "position": [
+        450,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.duplicate }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Already Processed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
     }
   ],
   "connections": {
@@ -215,7 +275,7 @@
       "main": [
         [
           {
-            "node": "Route by Event Type",
+            "node": "Already Processed?",
             "type": "main",
             "index": 0
           }
@@ -303,6 +363,24 @@
         [
           {
             "node": "Perfex Webhook Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Processed?": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Event Type",
             "type": "main",
             "index": 0
           }
