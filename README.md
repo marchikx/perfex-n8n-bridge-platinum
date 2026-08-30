@@ -1,6 +1,6 @@
 # N8N Bridge for Perfex CRM - Platinum Edition
 
-**Version 2.0.0 - Platinum Release**
+**Version 2.1.0**
 
 Professional bi-directional automation suite connecting Perfex CRM to N8N workflow automation platform.
 
