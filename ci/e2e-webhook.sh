@@ -63,7 +63,7 @@ docker cp /tmp/e2e-workflow.json n8n:/tmp/wf.json
 docker exec n8n n8n import:workflow --input=/tmp/wf.json || { docker logs n8n 2>&1 | tail -30; exit 1; }
 WFID=$(docker exec n8n n8n list:workflow | head -1 | cut -d'|' -f1 | tr -d ' \r')
 echo "workflow id=$WFID"
-[ -n "$WFID" ] || { echo "no workflow id"; exit 1; }
+case "$WFID" in ''|*[!A-Za-z0-9_-]*) echo "id does not look like an id: '$WFID'"; docker exec n8n n8n list:workflow; exit 1;; esac
 
 docker exec n8n n8n update:workflow --id="$WFID" --active=true || { echo "activate failed"; exit 1; }
 
@@ -102,22 +102,12 @@ fi
 say "2. the same body with a forged signature"
 OUT=$(post "$BODY" "$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac wrong-secret -r | cut -d' ' -f1)")
 echo "$OUT"
-if echo "$OUT" | grep -q '"verified":true'; then
-  echo "  FAIL - a forged signature was accepted"
-  fails=$((fails+1))
-else
-  echo "  ok - rejected"
-fi
+expect_rejected "a forged signature" "$OUT"
 
 say "3. a request signed with the secret that used to be published in the file"
 OUT=$(post "$BODY" "$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac 'your-hmac-secret-here' -r | cut -d' ' -f1)")
 echo "$OUT"
-if echo "$OUT" | grep -q '"verified":true'; then
-  echo "  FAIL - the old published default still works"
-  fails=$((fails+1))
-else
-  echo "  ok - rejected"
-fi
+expect_rejected "the old published default" "$OUT"
 
 say "n8n logs"
 docker logs n8n 2>&1 | tail -30
