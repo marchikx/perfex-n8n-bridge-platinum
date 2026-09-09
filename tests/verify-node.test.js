@@ -21,7 +21,14 @@ if (!node || !node.parameters || !node.parameters.functionCode) {
   process.exit(2);
 }
 const code = node.parameters.functionCode;
-const fn = new Function('items', '$env', 'getBinaryDataAsync', '$getWorkflowStaticData', 'require', 'Buffer',
+// The blueprint ships a legacy Function node, and that node exposes
+// getWorkflowStaticData WITHOUT the $ prefix - only the Code node has the
+// prefixed name. Until 2026-09-09 this harness injected the prefixed one, so
+// all eighteen cases were green while every genuinely signed webhook threw
+// inside a real n8n (measured, run 34324647318). Injecting the name the target
+// runtime actually provides is what makes this suite able to fail for the
+// reason that matters: put the $ back in the node and these cases go red.
+const fn = new Function('items', '$env', 'getBinaryDataAsync', 'getWorkflowStaticData', 'require', 'Buffer',
   'return (async function(){' + code + '})()');
 
 const SECRET = 's3cr3t-from-env';

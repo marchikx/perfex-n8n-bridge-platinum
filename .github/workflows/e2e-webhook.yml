@@ -18,5 +18,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: unit harness (fast, and now able to fail for the right reason)
+        run: node tests/verify-node.test.js
       - name: verify in a real n8n
         run: bash ci/e2e-webhook.sh
