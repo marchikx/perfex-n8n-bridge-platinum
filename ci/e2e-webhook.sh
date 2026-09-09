@@ -61,7 +61,16 @@ echo "healthz http=$code"
 say "importing through the CLI (no owner setup, no password)"
 docker cp /tmp/e2e-workflow.json n8n:/tmp/wf.json
 docker exec n8n n8n import:workflow --input=/tmp/wf.json || { docker logs n8n 2>&1 | tail -30; exit 1; }
-WFID=$(docker exec n8n n8n list:workflow | head -1 | cut -d'|' -f1 | tr -d ' \r')
+# list:workflow prints a settings banner before the rows, and runs 34324252208
+# and 34324424610 both parsed that banner as the id. --onlyId prints ids alone;
+# the filter keeps only lines that are entirely id-shaped, so a banner cannot
+# survive it even if the flag is missing and the banner comes through anyway.
+WFID=$(docker exec n8n n8n list:workflow --onlyId 2>/dev/null | tr -d '\r' \
+        | grep -E '^[A-Za-z0-9_-]+$' | tail -1)
+if [ -z "$WFID" ]; then
+  WFID=$(docker exec n8n n8n list:workflow 2>/dev/null | tr -d '\r' \
+          | grep -E '^[A-Za-z0-9_-]+\|' | tail -1 | cut -d'|' -f1)
+fi
 echo "workflow id=$WFID"
 case "$WFID" in ''|*[!A-Za-z0-9_-]*) echo "id does not look like an id: '$WFID'"; docker exec n8n n8n list:workflow; exit 1;; esac
 
