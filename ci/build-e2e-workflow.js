@@ -13,7 +13,9 @@
  *   - the wiring, because the shipped flow routes through Slack, which needs
  *     credentials and has nothing to do with signature verification
  *
- * Writes the workflow to stdout.
+ * Writes the workflow to stdout as a one-element array: `n8n import:workflow`
+ * calls .map on what it parses, so a bare object fails with
+ * "workflows.map is not a function" - measured, not guessed (run 34324043342).
  */
 
 const fs = require("fs");
@@ -49,7 +51,7 @@ const respond = {
 
 process.stdout.write(
   JSON.stringify(
-    {
+    [{
       name: "e2e verify (published nodes, ours wiring)",
       nodes: [webhook, verify, respond],
       connections: {
@@ -58,7 +60,7 @@ process.stdout.write(
       },
       settings: { executionOrder: "v1" },
       active: false,
-    },
+    }],
     null,
     2,
   ) + "\n",
