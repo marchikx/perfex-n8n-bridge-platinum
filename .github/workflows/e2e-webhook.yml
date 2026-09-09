@@ -1,0 +1,24 @@
+# Asks n8n, instead of asking our own harness.
+#
+# tests/verify-node.test.js hands the node a stub for getBinaryDataAsync, so it
+# proves the node against our belief about what n8n passes a Function node. A
+# wrong belief about exactly that shipped in March and threw on every request
+# for five months. This boots the real image, imports the published webhook and
+# verification nodes, and sends a signed HTTP request at the real webhook URL.
+name: e2e webhook in real n8n
+
+on:
+  push:
+    branches: [ci/e2e-webhook]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: unit harness (fast, and now able to fail for the right reason)
+        run: node tests/verify-node.test.js
+      - name: verify in a real n8n
+        run: bash ci/e2e-webhook.sh
