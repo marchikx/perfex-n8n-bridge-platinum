@@ -87,11 +87,27 @@ sleep 5
 
 # --- the actual question -----------------------------------------------------
 post() { # body, signature -> prints the response body
-  curl -s -X POST "$WEBHOOK" \
+  curl -s -w ' HTTPCODE=%{http_code}' -X POST "$WEBHOOK" \
     -H 'content-type: application/json' \
     -H "x-perfex-signature: $2" \
     -H 'x-perfex-event: invoice_paid' \
     --data-binary "$1"
+}
+
+# A rejection only counts when the request actually reached the node. In run
+# 34324252208 the workflow was never activated, every POST 404ed, and both
+# forged-signature cases still printed ok - they passed for the wrong reason.
+# So a rejection must carry the verifier's own answer, not merely lack an
+# acceptance. This function was referenced but never defined until now, so runs
+# up to 34324647318 asserted nothing at all on cases 2 and 3.
+expect_rejected() { # label, output
+  if echo "$2" | grep -q 'HTTPCODE=200' && echo "$2" | grep -q '"verified":false'; then
+    echo "  ok - reached the node and was rejected"
+  elif echo "$2" | grep -q '"verified":true'; then
+    echo "  FAIL - $1 was ACCEPTED"; fails=$((fails+1))
+  else
+    echo "  FAIL - never reached the verifier (no verified:false with HTTP 200)"; fails=$((fails+1))
+  fi
 }
 sign() { printf '%s' "$1" | openssl dgst -sha256 -hmac "$SECRET" -r | cut -d' ' -f1; }
 
