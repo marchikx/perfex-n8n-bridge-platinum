@@ -100,8 +100,14 @@ async function run(name, items, env, expect) {
   const old = body(now - 3600), osig = sign(old, SECRET);
   await run('hour-old body, first time = genuine retry', [item(old, osig, now)], { PERFEX_HMAC_SECRET: SECRET }, 'PASS');
   await run('hour-old body, replayed = attacker', [item(old, osig, now)], { PERFEX_HMAC_SECRET: SECRET }, 'DUP');
-  const ancient = body(now - 14 * 3600);
-  await run('older than the whole ladder (14h)', [item(ancient, sign(ancient, SECRET), now)], { PERFEX_HMAC_SECRET: SECRET }, 'BLOCK');
+  // The case the ladder loop above cannot see: it runs every step as a fresh
+  // first delivery carrying the age of one interval. A real final retry carries
+  // the cumulative age, 5m+15m+1h+4h+12h = 17h20m, and a window pinned to the
+  // last interval rejects it.
+  const last = body(now - 62400);
+  await run('final retry, full ladder (17h20m)', [item(last, sign(last, SECRET), now)], { PERFEX_HMAC_SECRET: SECRET }, 'PASS');
+  const ancient = body(now - 19 * 3600);
+  await run('older than the window (19h)', [item(ancient, sign(ancient, SECRET), now)], { PERFEX_HMAC_SECRET: SECRET }, 'BLOCK');
 
   console.log('\n' + (fails === 0 ? 'all cases behaved as specified' : fails + ' case(s) did NOT behave as specified'));
   process.exit(fails === 0 ? 0 : 1);
