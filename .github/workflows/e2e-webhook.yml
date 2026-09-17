@@ -10,6 +10,11 @@ name: e2e webhook in real n8n
 on:
   push:
     branches: [ci/e2e-webhook]
+  # Without this the stand never guards a merge: six runs so far, every one from
+  # a push to ci/e2e-webhook, none from a pull request. A check that exists and
+  # does not run where the decision is made is the same class of defect as the
+  # window this PR fixes.
+  pull_request:
   workflow_dispatch:
 
 jobs:

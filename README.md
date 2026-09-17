@@ -222,11 +222,17 @@ needs the untouched request body and Node's `crypto`:
 
 **How replays are told apart from retries**
 
-The queue re-sends the stored body, so the timestamp inside a retry never moves
-and a 12-hour-old retry is indistinguishable from a replay by age alone. The
-node therefore accepts anything inside the retry window (13 hours, one hour past
-the final backoff step) and blocks repeats by remembering signatures it has
-already accepted, in the workflow's static data.
+The queue re-sends the stored body, so the timestamp inside a retry never moves,
+and the final retry describes an event 17h20m old. The node accepts anything inside
+the retry window and blocks repeats by remembering signatures it has already
+accepted, in the workflow's static data.
+
+The window is **derived, not written down**. `BACKOFF_INTERVALS` are the delays
+between attempts, not offsets from the first send, so the cumulative span is
+`5m + 15m + 1h + 4h + 12h = 17h20m`, not 12h. A window pinned to the last interval
+rejects the final retry - the same failure this fix exists to remove, one ladder
+step further along. The node sums the ladder and adds 40 minutes of margin (18h
+total); change the sender's ladder and the window follows.
 
 A repeat comes back as `verified: true` with `duplicate: true`. The workflow
 answers `200` so the queue stops retrying, and the `Already Processed?` branch
