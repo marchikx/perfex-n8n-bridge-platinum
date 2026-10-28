@@ -313,6 +313,7 @@ class N8n_sender
      *
      * @param string $provided_secret Optional provided secret
      * @return string HMAC secret key
+     * @throws RuntimeException If no secret is configured
      */
     protected function get_hmac_secret(string $provided_secret = ''): string
     {
@@ -327,7 +328,12 @@ class N8n_sender
         }
 
         // Fall back to general secret
-        return get_option('n8n_bridge_secret') ?: 'default_n8n_bridge_secret';
+        $legacy_secret = get_option('n8n_bridge_secret');
+        if (!empty($legacy_secret)) {
+            return $legacy_secret;
+        }
+
+        throw new RuntimeException('N8N Bridge HMAC secret is not configured');
     }
 
     /**

@@ -23,6 +23,17 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: syntax check changed PHP files
+        run: |
+          php -n -l n8n_bridge/libraries/N8n_sender.php
+          php -n -l tests/sender-hmac.test.php
+      - name: PHP sender HMAC regression tests
+        run: php -n tests/sender-hmac.test.php
       - name: unit harness (fast, and now able to fail for the right reason)
         run: node tests/verify-node.test.js
       - name: verify in a real n8n
